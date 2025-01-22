@@ -1,0 +1,5 @@
+Variables:
+x, y
+Equations:
+x^2 - 2*x - y + 0.5
+x^2 + 4*y^2 - 4
