@@ -23,16 +23,18 @@ def main():
         eqns = create_eqns(num)
         guess = initial_guess(variables)
         jacobian_matrix = compute_jacobian(eqns, variables)
+        print("Jacobian Matrix")
 
         pprint(jacobian_matrix)
-        tolerance = compute_tolerance()
-        pprint(jacobian_matrix)
+        n = int(input("Enter the number of decimals: "))
+
+        tolerance = compute_tolerance(n)
+
         print(f"Tolerance: {tolerance}")
 
-        root = compute_root(guess, eqns, jacobian_matrix, variables, tolerance)
+        root = compute_root(guess, eqns, jacobian_matrix, variables, tolerance, n)
         save_results(variables, eqns, root)
         pprint(root)
-        pprint(eqns)
 
     except Exception as e:
         print("Error:", e)

@@ -1,9 +1,9 @@
 from sympy import Matrix, sympify, symbols, diff
+from prettytable import PrettyTable
 import csv
 
 
-def compute_tolerance():
-    num = int(input("Enter the number of decimals: "))
+def compute_tolerance(num):
     if num <= 0:
         raise ValueError("Number of decimals must be positive.")
     return 0.5 * 10**-num
@@ -50,10 +50,20 @@ def compute_jacobian(eqns, vars):
     return jacobian_matrix
 
 
-def compute_root(guess, eqns, j, vars, tol):
+def compute_root(guess, eqns, j, vars, tol, n):
     max_iter = 1000
     jacobian_matrix = Matrix(j)
     f_matrix = Matrix(eqns)
+
+    table = PrettyTable()
+    table.field_names = [
+        "Iteration",
+        "Guess",
+        "Jacobian Determinant",
+        "Delta",
+        "Norm of Delta",
+    ]
+
     for i in range(max_iter):
         jacobian = Matrix(jacobian_matrix.subs(dict(zip(vars, guess))))
 
@@ -67,25 +77,42 @@ def compute_root(guess, eqns, j, vars, tol):
         delta = j_inv * f_value
         guess = guess - delta
 
-        if delta.norm() < tol:
-            print(f"Converged in {i + 1} iterations.")
-            return guess
+        delta_norm = delta.norm()
 
+        table.add_row(
+            [
+                i + 1,
+                ", ".join([f"{g:.6f}" for g in guess]),
+                f"{jacobian.det():.6f}",
+                ", ".join([f"{d:.6f}" for d in delta]),
+                f"{delta_norm:.6f}",
+            ]
+        )
+
+        if delta_norm < tol:
+            print(f"Converged in {i + 1} iterations.")
+            formatted_ans = Matrix([round(val, n) for val in guess])
+            print(table)
+            return formatted_ans
+
+    print(f"Newton's method did not converge within the maximum number of iterations.")
+    print(table)
     raise ValueError(
         "Newton's method did not converge within the maximum number of iterations."
     )
 
 
 def save_results(variables, equations, root, filename="results.csv"):
-
     with open(filename, mode="w", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(root)
     print(f"Root saved to {filename}")
 
+    matlab_equations = [str(eq).replace("**", "^") for eq in equations]
+
     with open("metadata.txt", mode="w") as file:
         file.write("Variables:\n")
         file.write(", ".join(map(str, variables)) + "\n")
         file.write("Equations:\n")
-        file.write("\n".join(map(str, equations)) + "\n")
-    print("Variables and equations saved to metadata.txt")
+        file.write("\n".join(matlab_equations) + "\n")
+    print("Variables and equations saved to metadata.txt (MATLAB-compatible)")
